@@ -2,6 +2,7 @@
 import pygame
 import random
 import time
+import os
 
 pygame.font.init()
 myfont = pygame.font.SysFont('Arial', 15)
@@ -17,6 +18,8 @@ red = (255, 0, 0)
 
 snake_block = 10
 
+fname = "score.txt"
+
 display = pygame.display.set_mode((window_size_x, window_size_y))  # define display, set window size
 
 def get_food_pos(window_size_x,window_size_y):
@@ -30,15 +33,20 @@ def message(msg,color):
     mesg = myfont.render(msg, True, color)
     display.blit(mesg, [window_size_x/4, window_size_y/2])
 
-def display_score(score):
+def display_score(score, highest_score):
 
     value = myfont.render("Your Score: " + str(score), True, blue)
     display.blit(value, [0, 0])
+    value = myfont.render("Highest Score: " + str(highest_score), True, blue)
+    display.blit(value, [0, 20])
 
-def game_lost():
+def game_lost(score, highest_score):
 
-    message("Game Over Press Q-Quit or C-Play Again",red)
+    message("Game Over Press Q-Quit or C-Play Again", red)
     pygame.display.update()
+
+    if score > highest_score:
+        write_highest_score(score)
 
     play_again = True
 
@@ -53,11 +61,24 @@ def game_lost():
                 if event.key == pygame.K_c:
                     main()
 
-
 def our_snake(snake_block, snake_list):
     for x in snake_list:
         pygame.draw.rect(display, black, [x[0], x[1], snake_block, snake_block])
 
+def write_highest_score(score):
+    f = open(fname, "w")
+    # f.seek(0)
+    f.write(str(score))
+    # f.truncate()
+    f.close()
+
+def read_highest_score():
+    if os.path.isfile(fname): # if file exists, read highest score
+        f = open(fname, "r")
+        highest_score = int(f.read())
+    else: # else highest score is 0
+        highest_score = 0
+    return highest_score
 
 def main():
 
@@ -77,9 +98,9 @@ def main():
 
     score = 0
 
-    delta_pos = 10  # how much the position changes per frame
+    delta_pos = 10 # how much the position changes per frame
 
-    frames_per_second = 5  # how many times display updates snake position per second ~ speed
+    frames_per_second = 10  # how many times display updates snake position per second ~ speed
 
     clock = pygame.time.Clock()  # create clock object
 
@@ -89,9 +110,12 @@ def main():
 
     game_over = False
 
+    highest_score = read_highest_score()
+
     while not game_over:
 
         for event in pygame.event.get():
+
 
             # print(event) # print out events
 
@@ -124,9 +148,7 @@ def main():
         if len(snake_list) > snake_len:
             del snake_list[0]
 
-        for x in snake_list[:-1]:
-            if x == snake_head:
-                game_lost()
+
 
         # if snake reaches food position, generate new food position
         if (snake_head_x == food_x) and (snake_head_y == food_y):
@@ -142,7 +164,7 @@ def main():
 
         our_snake(snake_block, snake_list)
 
-        display_score(score)
+        display_score(score, highest_score)
 
         pygame.display.update()
 
@@ -150,15 +172,19 @@ def main():
 
         print(snake_head_x, snake_head_y)
 
+        # ??? if you bump into snake's tail
+        for x in snake_list[:-1]:
+            if x == snake_head:
+                game_over = True
+                game_lost(score, highest_score)
+
+        # if you go off screen
         if (snake_head_x < 0) or (snake_head_x > window_size_x) or (snake_head_y < 0) or (snake_head_y > window_size_y):
             game_over = True
-            game_lost()
-            # game_over = game_over_function(display)
+            game_lost(score, highest_score)
 
     pygame.display.update()
 
     time.sleep(60)
-
-
 
 main()
