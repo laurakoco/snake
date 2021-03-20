@@ -30,6 +30,11 @@ def message(msg,color):
     mesg = myfont.render(msg, True, color)
     display.blit(mesg, [window_size_x/4, window_size_y/2])
 
+def display_score(score):
+
+    value = myfont.render("Your Score: " + str(score), True, blue)
+    display.blit(value, [0, 0])
+
 def game_lost():
 
     message("Game Over Press Q-Quit or C-Play Again",red)
@@ -69,6 +74,8 @@ def main():
 
     x_delta = 0
     y_delta = 0
+
+    score = 0
 
     delta_pos = 10  # how much the position changes per frame
 
@@ -124,6 +131,7 @@ def main():
         # if snake reaches food position, generate new food position
         if (snake_head_x == food_x) and (snake_head_y == food_y):
             snake_len = snake_len + 1
+            score = score + 10
             print(snake_len)
             food_x, food_y = get_food_pos(window_size_x, window_size_y)
 
@@ -133,6 +141,8 @@ def main():
         pygame.draw.rect(display, red, [food_x, food_y, 10, 10]) # food
 
         our_snake(snake_block, snake_list)
+
+        display_score(score)
 
         pygame.display.update()
 
