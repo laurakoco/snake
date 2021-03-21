@@ -11,7 +11,7 @@ myfont = pygame.font.SysFont('Arial', 15)
 window_size_x = 400
 window_size_y = 300
 
-# define RGB colors
+# define RGB color tuples
 white = (255, 255, 255)
 black = (0, 0, 0)
 blue = (0, 0, 255)

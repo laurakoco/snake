@@ -14,9 +14,9 @@ Snake is a video game concept in which the player moves around a line (the snake
 
 ## Gameplay
 
-The player controls the snake's head on a bordered screen by using up, down, left, and right arrow keys. At the start of the game, the length of the snake is 1. A piece of food is randomly placed on the screen. The player moves the snake to the food to grow the snake in length. When a piece of food is consumed, the snake's tail increases by 1 square, and the score is increased. 
+The player controls the snake's head on a screen by using up, down, left, and right arrow keys. At the start of the game, the head of the snake is centered in the screen. A piece of purple food is randomly placed on the screen. The player moves the snake to the food to grow the snake in length. When a piece of food is consumed, the snake's body increases by 1 block, and the score is increased. 
 
-As the snake's head moves forward, its tail follows. The player loses when the snake runs into the screen border or itself.
+As the snake's head moves forward, its body follows. The player loses when the snake runs into the screen border or itself.
 
 ## Built With
 
@@ -39,6 +39,8 @@ $ pip install pygame 2.0.1
 ```
 $ python snake.py
 ```
+
+A pygame window with the title ‘SNAKE’ should pop up. The snake starts as a green block of size 1. Press the up, down, left, or right arrow key to begin moving the snake. Once the snake is moving, it cannot be stopped. Direct the snake to the purple block, which is the food. 
 
 ## Author
 
