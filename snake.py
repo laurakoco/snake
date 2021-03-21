@@ -2,8 +2,9 @@
 import pygame
 import random
 import time
-import os
+# import os
 
+# define global variables
 pygame.font.init()
 myfont = pygame.font.SysFont('Arial', 15)
 
@@ -15,34 +16,109 @@ white = (255, 255, 255)
 black = (0, 0, 0)
 blue = (0, 0, 255)
 red = (255, 0, 0)
+green = (0, 255, 0)
+pink = (255, 20, 147)
+purple = (153,50,204)
 
-snake_block = 10
+filename = "score.txt"
 
-fname = "score.txt"
+display = pygame.display.set_mode((window_size_x, window_size_y)) # define display, set window size
 
-display = pygame.display.set_mode((window_size_x, window_size_y))  # define display, set window size
+frames_per_second = 10  # define how many times display updates snake position per second ~ snake speed
 
-def get_food_pos(window_size_x,window_size_y):
+class food:
 
-    x_pos_rand = random.randrange(0, window_size_x, 10)
-    y_pos_rand = random.randrange(0, window_size_y, 10)
+    def __init__(self):
 
-    return x_pos_rand, y_pos_rand
+        self.x_pos = 0
+        self.y_pos = 0
+        self.color = purple
 
-def message(msg,color):
-    mesg = myfont.render(msg, True, color)
-    display.blit(mesg, [window_size_x/4, window_size_y/2])
+        self.block_size = 10
+
+    def get_food_pos(self, window_size_x, window_size_y):
+
+        self.x_pos = random.randrange(0, window_size_x, 10)
+        self.y_pos = random.randrange(0, window_size_y, 10)
+
+        return self.x_pos, self.y_pos
+
+    def draw_food(self):
+
+        pygame.draw.rect(display, self.color, [self.x_pos, self.y_pos, self.block_size, self.block_size]) # draw food
+
+class snake:
+
+    def __init__(self):
+
+        self.snake_head_x = window_size_x / 2 # snake head starting position
+        self.snake_head_y = window_size_y / 2
+
+        self.block_size = 10
+        self.snake_len = 1
+        self.color = green
+
+        self.snake_list = []
+
+        self.snake_head = []
+
+    def increase_length(self): # increase length of snake
+        self.snake_len += 1
+
+    def draw_snake(self): # draw snake
+        for x in self.snake_list:
+            pygame.draw.rect(display, self.color, [x[0], x[1], self.block_size, self.block_size])
+
+    def update_head_pos(self, x_delta, y_delta):
+
+        self.snake_head_x += x_delta
+        self.snake_head_y += y_delta
+
+        self.snake_head = [self.snake_head_x, self.snake_head_y]
+
+        self.snake_list.append(self.snake_head)
+
+        if len(self.snake_list) > self.snake_len: # erase head from last frame
+            del self.snake_list[0]
+
+    def got_food(self, food_x, food_y): # check if snake's head is at food position
+        if (self.snake_head_x == food_x) and (self.snake_head_y == food_y):
+            return True
+        else:
+            return False
+
+    def off_screen(self): # check is snake is off screen
+        if (self.snake_head_x < 0) or (self.snake_head_x > window_size_x) or (self.snake_head_y < 0) or (self.snake_head_y > window_size_y):
+            return True
+        else:
+            return False
+
+    def bump_into_self(self): # check is snake bumps into self
+        for x in self.snake_list[:-1]:
+            if x == self.snake_head:
+                return True
+        return False
 
 def display_score(score, highest_score):
+    value = myfont.render("Your Score: " + str(score), True, pink)
+    display.blit(value, [2, 0])
+    value = myfont.render("Highest Score: " + str(highest_score), True, pink)
+    display.blit(value, [2, 20])
 
-    value = myfont.render("Your Score: " + str(score), True, blue)
-    display.blit(value, [0, 0])
-    value = myfont.render("Highest Score: " + str(highest_score), True, blue)
-    display.blit(value, [0, 20])
+def exit_game():
+    pygame.quit()
+    quit()
 
 def game_lost(score, highest_score):
 
-    message("Game Over Press Q-Quit or C-Play Again", red)
+    msg1 = "Game Over"
+    mesg1 = myfont.render(msg1, True, red)
+    display.blit(mesg1, [window_size_x/16*6, window_size_y/2])
+
+    msg2 = "Press Q-Quit or C-Play Again"
+    mesg2 = myfont.render(msg2, True, red)
+    display.blit(mesg2, [window_size_x/4, window_size_y/2+20])
+
     pygame.display.update()
 
     if score > highest_score:
@@ -56,135 +132,91 @@ def game_lost(score, highest_score):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
                     play_again = False
-                    pygame.quit()
-                    quit()
+                    exit_game()
                 if event.key == pygame.K_c:
-                    main()
+                    main_loop()
 
-def our_snake(snake_block, snake_list):
-    for x in snake_list:
-        pygame.draw.rect(display, black, [x[0], x[1], snake_block, snake_block])
+def check_event(event, my_snake, x_delta, y_delta):
 
-def write_highest_score(score):
-    f = open(fname, "w")
-    # f.seek(0)
+    # print(event) # print out events
+
+    if event.type == pygame.QUIT: # if close button is clicked
+        exit_game()
+
+    if event.type == pygame.KEYDOWN: # if key is pressed
+        if event.key == pygame.K_UP: # up arrow
+            x_delta = 0
+            y_delta = -my_snake.block_size
+        if event.key == pygame.K_DOWN: # down arrow
+            x_delta = 0
+            y_delta = my_snake.block_size
+        if event.key == pygame.K_LEFT: # left arrow
+            x_delta = -my_snake.block_size
+            y_delta = 0
+        if event.key == pygame.K_RIGHT: # right arrow
+            x_delta = my_snake.block_size
+            y_delta = 0
+
+    return x_delta, y_delta
+
+def write_highest_score(score): # store highest score in file
+    f = open(filename, "w")
     f.write(str(score))
-    # f.truncate()
     f.close()
 
-def read_highest_score():
-    if os.path.isfile(fname): # if file exists, read highest score
-        f = open(fname, "r")
+def read_highest_score(): # read highest score from file
+    try: # try to open file to get highest score
+        f = open(filename, "r")
         highest_score = int(f.read())
-    else: # else highest score is 0
+    except OSError: # if file doesn't exist, highest score is 0
+        print(filename + ' not found!')
         highest_score = 0
-    return highest_score
+    return highest_score # read highest score from file
 
-def main():
+def main_loop():
 
     pygame.init()
 
-    pygame.display.set_caption('SNAKE')  # title on pygame window
+    clock = pygame.time.Clock()  # create clock object
 
-    # start positions of snake
-    snake_head_x = window_size_x / 2
-    snake_head_y = window_size_y / 2
+    pygame.display.set_caption('SNAKE') # title on pygame window
 
-    snake_list = []
-    snake_len = 1
+    my_snake = snake() # create instance of snake object
+
+    my_food = food() # create instance of food object
+    food_x, food_y = my_food.get_food_pos(window_size_x, window_size_y)
+
+    highest_score = read_highest_score() # read highest score from file
 
     x_delta = 0
     y_delta = 0
-
     score = 0
+    # game_over = False
 
-    delta_pos = 10 # how much the position changes per frame
+    while True:
 
-    frames_per_second = 10  # how many times display updates snake position per second ~ speed
+        for event in pygame.event.get(): # check for key press and quit events
+            x_delta, y_delta = check_event(event, my_snake, x_delta, y_delta)
 
-    clock = pygame.time.Clock()  # create clock object
+        my_snake.update_head_pos(x_delta, y_delta) # update head position of snake based on event
 
-    exit_game = False  # boolean for pygame while loop
+        if my_snake.got_food(food_x, food_y): # if snake reaches food position
+            my_snake.increase_length() # increase length
+            score += 10 # increase score
+            food_x, food_y = my_food.get_food_pos(window_size_x, window_size_y) # generate new food position
 
-    food_x, food_y = get_food_pos(window_size_x, window_size_y)
-
-    game_over = False
-
-    highest_score = read_highest_score()
-
-    while not game_over:
-
-        for event in pygame.event.get():
-
-
-            # print(event) # print out events
-
-            if event.type == pygame.QUIT: # if close button is clicked
-                exit_game = True
-
-            if event.type == pygame.KEYDOWN: # if key is pressed
-                if event.key == pygame.K_UP: # up arrow
-                    x_delta = 0
-                    y_delta = -snake_block
-                if event.key == pygame.K_DOWN: # down arrow
-                    x_delta = 0
-                    y_delta = snake_block
-                if event.key == pygame.K_LEFT: # left arrow
-                    x_delta = -snake_block
-                    y_delta = 0
-                if event.key == pygame.K_RIGHT: # right arrow
-                    x_delta = snake_block
-                    y_delta = 0
-
-        snake_head_x += x_delta
-        snake_head_y += y_delta
-
-        snake_head = []
-        snake_head.append(snake_head_x)
-        snake_head.append(snake_head_y)
-        snake_list.append(snake_head)
-        print(snake_list)
-
-        if len(snake_list) > snake_len:
-            del snake_list[0]
-
-
-
-        # if snake reaches food position, generate new food position
-        if (snake_head_x == food_x) and (snake_head_y == food_y):
-            snake_len = snake_len + 1
-            score = score + 10
-            print(snake_len)
-            food_x, food_y = get_food_pos(window_size_x, window_size_y)
-
-        display.fill(white) # background color
-
-        pygame.draw.rect(display, black, [snake_head_x, snake_head_y, snake_block, snake_block]) # snake
-        pygame.draw.rect(display, red, [food_x, food_y, 10, 10]) # food
-
-        our_snake(snake_block, snake_list)
-
-        display_score(score, highest_score)
-
-        pygame.display.update()
-
-        clock.tick(frames_per_second) # update x frames/second
-
-        print(snake_head_x, snake_head_y)
-
-        # ??? if you bump into snake's tail
-        for x in snake_list[:-1]:
-            if x == snake_head:
-                game_over = True
-                game_lost(score, highest_score)
-
-        # if you go off screen
-        if (snake_head_x < 0) or (snake_head_x > window_size_x) or (snake_head_y < 0) or (snake_head_y > window_size_y):
-            game_over = True
+        if my_snake.off_screen() or my_snake.bump_into_self(): # if snake goes off screen or bumps into self, lose game
+            # game_over = True
             game_lost(score, highest_score)
 
-    pygame.display.update()
+        display.fill(white) # draw background color
+        my_food.draw_food() # draw food
+        my_snake.draw_snake() # draw snake
+        display_score(score, highest_score) # display score
+        pygame.display.update()
+        clock.tick(frames_per_second) # update x frames/second
 
-    time.sleep(60)
+    # pygame.display.update()
+    # time.sleep(60)
 
-main()
+main_loop()
