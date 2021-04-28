@@ -2,7 +2,7 @@
 
 Snake game in Python
 
-<img src="images/snake_1.png" width="400">
+<img src="images/snake_2.png" width="400">
 
 ## Purpose
 
